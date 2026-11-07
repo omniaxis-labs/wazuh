@@ -1,0 +1,31 @@
+<!--
+  OmniAxis Labs SCDC decoders.
+
+  The intake relay hands every verified product event to Wazuh as one line:
+
+      omniaxis-scdc: {"specversion":"scdc/1","id":"evt_...","source":"musterward",...}
+
+  The fixed prefix keeps these lines away from the stock "json" decoder (which
+  matches any line starting with "{"), so an ordinary JSON log line on a
+  monitored host can never be decoded as a product event. The relay builds the
+  JSON itself from an allowlist of contract fields; nothing from the request is
+  passed through as raw text.
+
+  The relay's own refusals and sink failures are logged the same way with the
+  prefix "omniaxis-scdc-relay: ".
+
+  Nested objects are flattened by JSON_Decoder: refs.tenant_ref, refs.actor_ref,
+  refs.resource, counts.<name>.
+-->
+
+<decoder name="omniaxis-scdc">
+  <prematch>^omniaxis-scdc: </prematch>
+  <plugin_decoder offset="after_prematch">JSON_Decoder</plugin_decoder>
+  <json_null_field>discard</json_null_field>
+</decoder>
+
+<decoder name="omniaxis-scdc-relay">
+  <prematch>^omniaxis-scdc-relay: </prematch>
+  <plugin_decoder offset="after_prematch">JSON_Decoder</plugin_decoder>
+  <json_null_field>discard</json_null_field>
+</decoder>

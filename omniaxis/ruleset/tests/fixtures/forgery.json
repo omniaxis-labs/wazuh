@@ -1,0 +1,63 @@
+[
+  {
+    "name": "Contract line from a local log file is flagged as forged",
+    "events": [
+      {
+        "location": "/var/log/app.log",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev4\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100102",
+      "level": 12,
+      "groups": [
+        "scdc_forged"
+      ]
+    }
+  },
+  {
+    "name": "Contract line from an agent is flagged as forged",
+    "events": [
+      {
+        "location": "(gate) 10.0.0.5->/var/log/app.log",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev1\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100102",
+      "level": 12
+    }
+  },
+  {
+    "name": "Wrong specversion through the API is flagged",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/2\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100104",
+      "level": 12,
+      "groups": [
+        "scdc_bad_version"
+      ]
+    }
+  },
+  {
+    "name": "Plain JSON with SCDC fields is not decoded as a contract event",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "{\"specversion\": \"scdc/1\", \"source\": \"musterward\", \"severity\": \"sev1\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id_not_prefix": "1001"
+    }
+  }
+]

@@ -1,0 +1,13 @@
+#!/bin/sh
+# wazuh-integratord entry point for the SCDC portal hand-off.
+# Runs custom-scdc-portal.py with Wazuh's bundled Python (which ships
+# `cryptography`), the same way Wazuh's own integration wrappers do.
+# Install as /var/ossec/integrations/custom-scdc-portal, root:wazuh 0750.
+
+OPENSSL_armcap=0
+export OPENSSL_armcap
+
+DIR_NAME="$(cd "$(dirname "$0")" && pwd -P)"
+WAZUH_PATH="${WAZUH_PATH:-$(cd "${DIR_NAME}/.." && pwd)}"
+
+exec "${WAZUH_PATH}/framework/python/bin/python3" "${DIR_NAME}/custom-scdc-portal.py" "$@"
