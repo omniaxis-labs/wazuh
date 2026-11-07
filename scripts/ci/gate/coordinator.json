@@ -1,0 +1,82 @@
+{
+	"$comment": "Checks file for the Musterward Gate (omniaxis-labs/musterward: docs/runbooks/gate-coordinator.md). It covers only the omniaxis/ folder; upstream Wazuh's own workflows and tests are upstream's and are not run here. On the gate the operator runs the approved copy in /etc/mw-coordinator/checks/omniaxis-labs/wazuh.json; this copy is the proposal. Every check runs in the gate's default Node 24 Debian image except scdc-portal-push, which needs Wazuh's bundled Python (it has cryptography; the gate runs jobs as container root, which owns /var/ossec, so it can run it): the gate file maps it with container.imageFor[\"scdc-portal-push\"] = { image: wazuh/wazuh-manager:4.14.9@sha256:9d07740f780024600101d759ddab9a4413bdcb3412ccb81dccc143b3cdc702a2, entry: [\"sh\", \"-c\", \"exec \\\"$@\\\"\", \"entry\"] }. The tests that need Docker (wazuh-logtest fixtures, the config-edit tests and the compose end-to-end run) cannot run inside a gate job and stay in omniaxis/run-tests.sh, run before marking a pull request ready.",
+	"version": 1,
+	"checks": [
+		{
+			"id": "scdc-rules",
+			"context": "scdc-rules",
+			"scope": "files",
+			"paths": ["omniaxis/ruleset/**"],
+			"minutes": 0.1,
+			"full": [["python3", "-B", "omniaxis/ruleset/tools/gen_rules.py", "--check"]],
+			"timeoutMinutes": 5,
+			"workspace": "clean"
+		},
+		{
+			"id": "scdc-relay",
+			"context": "scdc-relay",
+			"scope": "files",
+			"paths": ["omniaxis/intake-relay/**", "omniaxis/ruleset/tools/products.json"],
+			"minutes": 1,
+			"full": [
+				["npm", "ci", "--prefix", "omniaxis/intake-relay", "--no-audit", "--no-fund", "--cache", "/tmp/npm-cache"],
+				["npm", "--prefix", "omniaxis/intake-relay", "run", "typecheck"],
+				["npm", "--prefix", "omniaxis/intake-relay", "test"],
+				["npm", "--prefix", "omniaxis/intake-relay", "run", "test:vendor"]
+			],
+			"timeoutMinutes": 10,
+			"workspace": "clean"
+		},
+		{
+			"id": "scdc-portal-push",
+			"context": "scdc-portal-push",
+			"scope": "files",
+			"paths": ["omniaxis/integrations/**", "omniaxis/intake-relay/vendor/scdc-verifier/**"],
+			"minutes": 0.2,
+			"full": [
+				[
+					"/var/ossec/framework/python/bin/python3",
+					"-B",
+					"-m",
+					"unittest",
+					"discover",
+					"-s",
+					"omniaxis/integrations/custom-scdc-portal/tests"
+				]
+			],
+			"timeoutMinutes": 5,
+			"workspace": "clean"
+		},
+		{
+			"id": "scdc-scripts",
+			"context": "scdc-scripts",
+			"scope": "files",
+			"paths": ["omniaxis/deploy/**", "omniaxis/ruleset/tests/**", "omniaxis/run-tests.sh"],
+			"minutes": 0.1,
+			"full": [
+				[
+					"bash",
+					"-c",
+					"set -e; for f in omniaxis/run-tests.sh omniaxis/deploy/*/*.sh omniaxis/deploy/server/tests/*.sh omniaxis/ruleset/tests/*.sh; do bash -n \"$f\"; done; for f in omniaxis/deploy/docker/*.mjs; do node --check \"$f\"; done; python3 -B -c 'import ast, sys; [ast.parse(open(p).read(), p) for p in sys.argv[1:]]' omniaxis/deploy/server/*.py omniaxis/ruleset/tests/*.py omniaxis/ruleset/tools/*.py omniaxis/integrations/custom-scdc-portal/*.py"
+				]
+			],
+			"timeoutMinutes": 5,
+			"workspace": "clean"
+		}
+	],
+	"rules": {
+		"fullTargets": ["omniaxis/4.14", "omniaxis/4.14-base"],
+		"fullLabel": "gate:full",
+		"fullWhenReady": true,
+		"fullFiles": ["scripts/ci/**", "omniaxis/run-tests.sh"],
+		"inertFiles": ["omniaxis/**/*.md", "omniaxis/docs/**"],
+		"security": {
+			"files": [
+				"omniaxis/intake-relay/src/**",
+				"omniaxis/intake-relay/vendor/**",
+				"omniaxis/integrations/**"
+			],
+			"always": ["scdc-relay", "scdc-portal-push"]
+		}
+	}
+}

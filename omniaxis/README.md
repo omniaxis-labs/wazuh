@@ -2,7 +2,7 @@
 
 This folder holds everything OmniAxis Labs adds to Wazuh to build the company's Security Cyber Defence Centre (SCDC).
 
-The branch `omniaxis/4.14` is cut from tag `v4.14.9`, the latest stable release. Nothing outside this folder is changed, so taking the next `v4.14.x` tag is a clean merge. Servers install the **official signed Wazuh packages**; this fork carries configuration only, not a build.
+The branch `omniaxis/4.14` is cut from tag `v4.14.9`, the latest stable release. Nothing outside this folder is changed except the gate checks file `scripts/ci/gate/coordinator.json`, a path upstream does not use, so taking the next `v4.14.x` tag is a clean merge. Servers install the **official signed Wazuh packages**; this fork carries configuration only, not a build.
 
 ```
 product (signed event) --> intake-relay --> Wazuh API /events --> ruleset --> alert
@@ -36,3 +36,5 @@ It runs:
 - 13 integration tests under Wazuh's bundled Python, including the portal's signing test vector byte for byte;
 - the config-edit tests;
 - the end-to-end path: signed event → relay → API → rules → signed portal push, with every push checked by the portal's own verifier.
+
+Pull requests are checked by the Musterward Gate, not GitHub Actions (see `CLAUDE.md`). It runs the parts that need no Docker: the generator check, the relay and verifier tests, the integration tests and script syntax, as listed in `scripts/ci/gate/coordinator.json`.
