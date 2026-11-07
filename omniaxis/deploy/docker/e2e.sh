@@ -9,7 +9,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TMP="$(mktemp -d)"
 export RELAY_CONFIG="$TMP/config.json"
 # Random per run; the stack is torn down afterwards. Meets Wazuh's password rules.
-export E2E_API_PASSWORD="E2e.$(openssl rand -hex 12)Aa1"
+E2E_API_PASSWORD="E2e.$(openssl rand -hex 12)Aa1"; export E2E_API_PASSWORD
 export RELAY_PORT="${RELAY_PORT:-18787}" MOCK_PORTAL_PORT="${MOCK_PORTAL_PORT:-19000}"
 DC=(docker compose -f "$HERE/docker-compose.yml")
 EXEC=("${DC[@]}" exec -T wazuh-manager)
@@ -76,7 +76,7 @@ say "alerts.json has the SEV1 alert (100111) and the relay refusal (100901)"
 
 say "waiting for the signed portal push"
 PUB="$("${EXEC[@]}" cat /var/ossec/etc/omniaxis/portal-signing.pub)"
-for i in $(seq 1 30); do
+for _ in $(seq 1 30); do
   if node "$HERE/e2e-driver.mjs" check-portal "http://127.0.0.1:$MOCK_PORTAL_PORT" "$PUB" "$TMP" 2>/dev/null; then ok=1; break; fi
   sleep 2
 done

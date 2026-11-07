@@ -1,0 +1,50 @@
+[Unit]
+Description=OmniAxis Labs SCDC intake relay
+Documentation=file:///opt/omniaxis-intake-relay/README.md
+After=network-online.target wazuh-manager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=scdc-intake
+Group=scdc-intake
+ExecStart=/opt/node/bin/node --disable-warning=ExperimentalWarning /opt/omniaxis-intake-relay/src/main.ts /etc/omniaxis-intake/config.json
+Environment=SCDC_DEDUPE_JOURNAL=/var/lib/omniaxis-intake/dedupe.journal
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=2
+StateDirectory=omniaxis-intake
+StateDirectoryMode=0700
+UMask=0027
+
+# Sandbox: the relay writes only its logs and its dedupe journal.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/log/omniaxis-scdc
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# V8 needs writable+executable memory for its JIT.
+MemoryDenyWriteExecute=no
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+MemoryMax=384M
+TasksMax=64
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

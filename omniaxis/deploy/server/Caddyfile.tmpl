@@ -1,0 +1,45 @@
+# Managed by omniaxis/deploy/server/40-install-relay.sh. The SCDC's only
+# public endpoint: one path, proxied to the relay on loopback.
+{
+	email @ACME_EMAIL@
+	admin off
+	servers {
+		timeouts {
+			read_header 10s
+			read_body 15s
+			write 15s
+			idle 60s
+		}
+	}
+}
+
+@HOSTNAME@ {
+	header {
+		Strict-Transport-Security "max-age=63072000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		-Server
+	}
+
+	handle /v1/events {
+		request_body {
+			max_size 16KB
+		}
+		reverse_proxy 127.0.0.1:8787 {
+			header_up -X-Forwarded-For
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	handle {
+		respond 404
+	}
+
+	log {
+		output file /var/log/caddy/intake-access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+		format json
+	}
+}
