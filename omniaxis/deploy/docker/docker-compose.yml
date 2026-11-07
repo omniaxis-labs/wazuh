@@ -1,0 +1,67 @@
+# Local single-node SCDC test stack: Wazuh 4.14.9 manager with the OmniAxis
+# ruleset and portal integration, the intake relay, and a mock portal.
+# For tests only; production installs official packages (deploy/server).
+#
+# Run the end-to-end test with:  omniaxis/deploy/docker/e2e.sh
+# The indexer and dashboard are left out: the manager's analysisd,
+# API and integratord are what the SCDC adds to, and alerts.json is the
+# ground truth the tests read.
+
+name: omniaxis-scdc-test
+
+services:
+  wazuh-manager:
+    image: wazuh/wazuh-manager:4.14.9
+    hostname: scdc-test
+    environment:
+      # Throwaway API admin, generated per run by e2e.sh.
+      API_USERNAME: wazuh-wui
+      API_PASSWORD: ${E2E_API_PASSWORD:?run via e2e.sh}
+      PORTAL_URL: http://mock-portal:9000/api/wazuh/alerts
+      PORTAL_KEY_ID: scdc-wazuh-test
+      # integratord passes its environment to the integration; this lets the
+      # script post to the plain-HTTP mock portal. Never set in production.
+      SCDC_ALLOW_HTTP_FOR_TESTS: "1"
+    volumes:
+      - ../:/omniaxis/deploy:ro
+      - ../../ruleset:/omniaxis/ruleset:ro
+      - ../../integrations:/omniaxis/integrations:ro
+      - ./entrypoint-omniaxis.sh:/entrypoint-scripts/50-omniaxis.sh:ro
+      - relay-logs:/var/log/omniaxis-scdc
+      - relay-secrets:/run/omniaxis-intake
+    ports:
+      # The relay shares this container's network namespace, so its port is
+      # published here. Loopback only.
+      - "127.0.0.1:${RELAY_PORT:-18787}:8787"
+
+  intake-relay:
+    image: node:24.22.1-alpine
+    profiles: ["relay"]
+    network_mode: service:wazuh-manager
+    user: "1000:1000"
+    read_only: true
+    working_dir: /app
+    command: ["node", "--disable-warning=ExperimentalWarning", "src/main.ts", "/etc/omniaxis-intake/config.json"]
+    environment:
+      SCDC_LISTEN_HOST: 0.0.0.0
+      SCDC_API_PASSWORD_FILE: /run/omniaxis-intake/api-password
+      SCDC_DEDUPE_JOURNAL: /run/omniaxis-intake/dedupe.journal
+    volumes:
+      - ../../intake-relay:/app:ro
+      - ${RELAY_CONFIG:?run via e2e.sh}:/etc/omniaxis-intake/config.json:ro
+      - relay-logs:/var/log/omniaxis-scdc
+      - relay-secrets:/run/omniaxis-intake
+
+  mock-portal:
+    image: node:24.22.1-alpine
+    user: "1000:1000"
+    read_only: true
+    command: ["node", "/mock/mock-portal.mjs"]
+    volumes:
+      - ./mock-portal.mjs:/mock/mock-portal.mjs:ro
+    ports:
+      - "127.0.0.1:${MOCK_PORTAL_PORT:-19000}:9000"
+
+volumes:
+  relay-logs:
+  relay-secrets:

@@ -172,7 +172,7 @@
     "name": "File sink location is accepted",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/intake.log",
+        "location": "/var/log/omniaxis-scdc/intake.log",
         "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev1\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
         "repeat": 1
       }

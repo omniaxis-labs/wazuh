@@ -18,7 +18,7 @@
   <!-- A verified contract event: it came through the intake relay. -->
   <rule id="100101" level="0">
     <if_sid>100100</if_sid>
-    <location>^API-Webhook$|^/var/ossec/logs/omniaxis/intake.log$</location>
+    <location>^API-Webhook$|^/var/log/omniaxis-scdc/intake.log$</location>
     <field name="specversion">^scdc/1$</field>
     <description>SCDC contract event</description>
   </rule>
@@ -27,14 +27,14 @@
        100101, so it must exclude the relay locations itself. -->
   <rule id="100102" level="12">
     <if_sid>100100</if_sid>
-    <location negate="yes">^API-Webhook$|^/var/ossec/logs/omniaxis/intake.log$</location>
+    <location negate="yes">^API-Webhook$|^/var/log/omniaxis-scdc/intake.log$</location>
     <description>SCDC event seen outside the intake relay (possible forgery) at $(location)</description>
     <group>scdc,scdc_forged,scdc_sev2,</group>
   </rule>
 
   <rule id="100104" level="12">
     <if_sid>100100</if_sid>
-    <location>^API-Webhook$|^/var/ossec/logs/omniaxis/intake.log$</location>
+    <location>^API-Webhook$|^/var/log/omniaxis-scdc/intake.log$</location>
     <field name="specversion" negate="yes">^scdc/1$</field>
     <description>SCDC event with an unsupported specversion: $(specversion)</description>
     <group>scdc,scdc_bad_version,scdc_sev2,</group>
@@ -252,7 +252,7 @@
   <!-- Intake relay health and refusals. -->
   <rule id="100900" level="0">
     <decoded_as>omniaxis-scdc-relay</decoded_as>
-    <location>^/var/ossec/logs/omniaxis/relay.log$</location>
+    <location>^/var/log/omniaxis-scdc/relay.log$</location>
     <description>SCDC intake relay log</description>
   </rule>
 

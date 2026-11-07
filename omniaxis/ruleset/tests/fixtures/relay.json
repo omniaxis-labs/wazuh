@@ -3,7 +3,7 @@
     "name": "Relay refusal is recorded at level 4",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
@@ -23,7 +23,7 @@
     "name": "Key signing for another product is SEV2",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"source_mismatch\",\"srcip\":\"203.0.113.9\",\"claimed_source\":\"omniaxis\",\"key_source\":\"musterward\"}",
         "repeat": 1
       }
@@ -37,7 +37,7 @@
     "name": "Burst of refusals from one address is SEV2",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 20
       }
@@ -51,7 +51,7 @@
     "name": "Sink failure is SEV2",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"sink_failed\",\"reason\":\"api_unreachable\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
@@ -65,7 +65,7 @@
     "name": "Relay start is recorded",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"started\",\"reason\":\"sink=api\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
@@ -92,83 +92,83 @@
     "name": "Refusals from different addresses do not count as a burst",
     "events": [
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.0\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.1\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.2\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.3\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.4\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.5\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.6\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.7\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.8\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.10\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.11\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.12\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.13\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.14\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.15\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.16\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.17\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.18\"}"
       },
       {
-        "location": "/var/ossec/logs/omniaxis/relay.log",
+        "location": "/var/log/omniaxis-scdc/relay.log",
         "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.19\"}"
       }
     ],

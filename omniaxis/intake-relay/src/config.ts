@@ -61,8 +61,8 @@ export function loadConfig(file: string, env: NodeJS.ProcessEnv = process.env): 
       passwordFile: env.SCDC_API_PASSWORD_FILE ?? raw.api?.passwordFile ?? "/etc/omniaxis-intake/api-password",
       caFile: raw.api?.caFile,
     },
-    intakeLog: env.SCDC_INTAKE_LOG ?? raw.intakeLog ?? "/var/ossec/logs/omniaxis/intake.log",
-    relayLog: env.SCDC_RELAY_LOG ?? raw.relayLog ?? "/var/ossec/logs/omniaxis/relay.log",
+    intakeLog: env.SCDC_INTAKE_LOG ?? raw.intakeLog ?? "/var/log/omniaxis-scdc/intake.log",
+    relayLog: env.SCDC_RELAY_LOG ?? raw.relayLog ?? "/var/log/omniaxis-scdc/relay.log",
     dedupeJournal: env.SCDC_DEDUPE_JOURNAL ?? raw.dedupeJournal,
     // Only trust X-Forwarded-For when the relay listens on loopback behind Caddy.
     trustProxy: raw.trustProxy ?? (host === "127.0.0.1" || host === "::1"),

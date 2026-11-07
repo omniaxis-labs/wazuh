@@ -1,0 +1,30 @@
+<!-- omniaxis:begin (managed by omniaxis/deploy; edits inside this block are overwritten) -->
+<ossec_config>
+  <!-- Every alert raised on the SCDC host itself names it as the product. -->
+  <labels>
+    <label key="product">scdc</label>
+  </labels>
+
+  <!-- Intake relay: JSON-lines fallback sink and the relay's own log.
+       only-future-events=no so lines written while Wazuh was down are read. -->
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/omniaxis-scdc/intake.log</location>
+    <only-future-events>no</only-future-events>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/omniaxis-scdc/relay.log</location>
+    <only-future-events>no</only-future-events>
+  </localfile>
+
+  <!-- Signed hand-off to the staff portal: SEV3 and above. -->
+  <integration>
+    <name>custom-scdc-portal</name>
+    <hook_url>@PORTAL_URL@</hook_url>
+    <level>7</level>
+    <alert_format>json</alert_format>
+    <options>{"key_file": "/var/ossec/etc/omniaxis/portal-signing.key", "key_id": "@PORTAL_KEY_ID@"}</options>
+  </integration>
+</ossec_config>
+<!-- omniaxis:end -->

@@ -32,8 +32,8 @@ ESCALATE_WINDOW_S = 600
 # Where verified events can come from. "API-Webhook" is the location analysisd
 # gives to POST /events; the file is the relay's localfile fallback. Agent
 # events always carry an "(agent) ip->" prefix, so an agent cannot spoof these.
-INTAKE_LOCATION = r"^API-Webhook$|^/var/ossec/logs/omniaxis/intake.log$"
-RELAY_LOCATION = r"^/var/ossec/logs/omniaxis/relay.log$"
+INTAKE_LOCATION = r"^API-Webhook$|^/var/log/omniaxis-scdc/intake.log$"
+RELAY_LOCATION = r"^/var/log/omniaxis-scdc/relay.log$"
 
 PRODUCT_BASE = 100110
 PRODUCT_STRIDE = 10
