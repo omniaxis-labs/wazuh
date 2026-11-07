@@ -1,0 +1,20 @@
+{
+  "name": "@omniaxis-labs/scdc-intake-relay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Signed intake relay for the OmniAxis Labs SCDC: verifies the section 4 contract and hands events to Wazuh on localhost.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/main.ts",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "24.10.1"
+  }
+}
