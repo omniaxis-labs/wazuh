@@ -1,15 +1,19 @@
-import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
-import { loadKey, type LoadedKey } from "../src/verify.ts";
+import { generateKeyPairSync, type KeyObject } from "node:crypto";
+import { encodePublicKey, signPayload } from "../vendor/scdc-verifier/src/index.ts";
+import type { PublicKeyRecord } from "../src/verify.ts";
 
 export interface TestProducer {
   privateKey: KeyObject;
-  key: LoadedKey;
+  key: PublicKeyRecord;
 }
 
-export function producer(source: string, keyId = `${source}-test`, environment?: string): TestProducer {
+export function producer(
+  source: PublicKeyRecord["source"],
+  id = `${source}-test`,
+  environment: PublicKeyRecord["environment"] = "production",
+): TestProducer {
   const { publicKey, privateKey } = generateKeyPairSync("ed25519");
-  const raw = publicKey.export({ format: "der", type: "spki" }).subarray(12).toString("base64");
-  return { privateKey, key: loadKey({ source, keyId, publicKey: raw, environment }) };
+  return { privateKey, key: { id, source, environment, publicKey: encodePublicKey(publicKey) } };
 }
 
 export function event(over: Record<string, unknown> = {}): Record<string, unknown> {
@@ -38,11 +42,11 @@ export function signedHeaders(
 ): Record<string, string> {
   const id = opts.id ?? (JSON.parse(body) as { id: string }).id;
   const ts = String(opts.ts ?? Math.floor(Date.now() / 1000));
-  const sig = sign(null, Buffer.from(`${id}.${ts}.${body}`), p.privateKey).toString("base64");
+  const sig = signPayload({ id, timestamp: ts, body, privateKey: p.privateKey });
   return {
     "webhook-id": id,
     "webhook-timestamp": ts,
-    "webhook-signature": [...(opts.extraSigs ?? []), `v1a,${sig}`].join(" "),
+    "webhook-signature": [...(opts.extraSigs ?? []), sig].join(" "),
     "content-type": "application/json",
   };
 }

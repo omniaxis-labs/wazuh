@@ -2,7 +2,7 @@
 # Enrol a company host (first: the gate host) as a Wazuh 4.14 agent of the
 # SCDC, with a product label carried on every alert. Idempotent.
 #
-#   sudo SCDC_MANAGER=<scdc server address> PRODUCT=gate \
+#   sudo SCDC_MANAGER=<scdc server address> PRODUCT=company \
 #        ENROL_PASSWORD_FILE=/root/scdc-authd.pass ./enrol-agent.sh
 #
 # The enrolment password file is copied from the SCDC server
@@ -13,7 +13,9 @@
 set -euo pipefail
 
 SCDC_MANAGER="${SCDC_MANAGER:?address of the SCDC server}"
-PRODUCT="${PRODUCT:?product label, e.g. gate}"
+# The portal accepts musterward, omniaxis, rackhand, crosswalk or company.
+# Shared company hosts such as the gate host are "company".
+PRODUCT="${PRODUCT:-company}"
 ENROL_PASSWORD_FILE="${ENROL_PASSWORD_FILE:?path to the enrolment password file}"
 AGENT_NAME="${AGENT_NAME:-$(hostname -s)}"
 WAZUH_VERSION="${WAZUH_VERSION:-4.14.9}"
@@ -22,7 +24,7 @@ MEMORY_MAX="${MEMORY_MAX:-512M}"
 say() { echo "[agent] $*"; }
 
 [ "$(id -u)" = 0 ] || { echo "run as root" >&2; exit 1; }
-[[ "$PRODUCT" =~ ^[a-z][a-z0-9-]{1,30}$ ]] || { echo "bad PRODUCT" >&2; exit 1; }
+case "$PRODUCT" in musterward|omniaxis|rackhand|crosswalk|company) ;; *) echo "PRODUCT must be musterward, omniaxis, rackhand, crosswalk or company" >&2; exit 1 ;; esac
 [[ "$AGENT_NAME" =~ ^[A-Za-z0-9._-]{1,64}$ ]] || { echo "bad AGENT_NAME" >&2; exit 1; }
 [ -s "$ENROL_PASSWORD_FILE" ] || { echo "missing $ENROL_PASSWORD_FILE" >&2; exit 1; }
 export DEBIAN_FRONTEND=noninteractive

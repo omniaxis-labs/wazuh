@@ -40,12 +40,12 @@ grep -q 'omniaxis:begin' /var/ossec/etc/ossec.conf && ok "omniaxis ossec.conf bl
 
 # The relay refuses an unsigned request and logs it for Wazuh.
 before="$(wc -l < /var/log/omniaxis-scdc/relay.log)"
-code="$(curl -s -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -d '{}' http://127.0.0.1:8787/v1/events)"
+code="$(curl -s -o /dev/null -w '%{http_code}' -H 'content-type: application/json' -d '{}' http://127.0.0.1:8787/api/intake/v1)"
 [ "$code" = 400 ] && ok "relay refuses an unsigned request (400)" || bad "relay answered $code to an unsigned request"
 sleep 1
 [ "$(wc -l < /var/log/omniaxis-scdc/relay.log)" -gt "$before" ] && ok "refusal logged to relay.log" || bad "refusal not logged"
 
 code="$(curl -s -o /dev/null -w '%{http_code}' "https://${SCDC_INTAKE_HOSTNAME}/" || true)"
-[ "$code" = 404 ] && ok "public host serves nothing but /v1/events" || bad "https://${SCDC_INTAKE_HOSTNAME}/ answered $code"
+[ "$code" = 404 ] && ok "public host serves nothing but /api/intake/v1" || bad "https://${SCDC_INTAKE_HOSTNAME}/ answered $code"
 
 [ $fail = 0 ] && say "all checks passed" || die "some checks failed"

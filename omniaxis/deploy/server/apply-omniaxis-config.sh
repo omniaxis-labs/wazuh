@@ -8,6 +8,7 @@
 #   OMNIAXIS_DIR    path to the repo's omniaxis/ folder (default: two levels up)
 #   PORTAL_URL      e.g. https://admin.omniaxislabs.com/api/wazuh/alerts
 #   PORTAL_KEY_ID   label for the portal signing key (default scdc-wazuh-1)
+#   SCDC_ENVIRONMENT  production | preview: this Wazuh deployment (default production)
 #   NO_RESTART=1    do not restart the manager (the caller will)
 set -euo pipefail
 
@@ -15,6 +16,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OMNIAXIS_DIR="${OMNIAXIS_DIR:-$(cd "$HERE/../.." && pwd)}"
 PORTAL_URL="${PORTAL_URL:?set PORTAL_URL}"
 PORTAL_KEY_ID="${PORTAL_KEY_ID:-scdc-wazuh-1}"
+SCDC_ENVIRONMENT="${SCDC_ENVIRONMENT:-production}"
+case "$SCDC_ENVIRONMENT" in production|preview) ;; *) echo "SCDC_ENVIRONMENT must be production or preview" >&2; exit 1 ;; esac
 W=/var/ossec
 PY="$W/framework/python/bin/python3"
 say() { echo "[omniaxis] $*"; }
@@ -54,12 +57,12 @@ PUB="$("$PY" - "$KEY" <<'PY'
 import sys, base64
 from cryptography.hazmat.primitives import serialization
 k = serialization.load_pem_private_key(open(sys.argv[1], "rb").read(), password=None)
-print(base64.b64encode(k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode())
+print("whpk_" + base64.b64encode(k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)).decode())
 PY
 )"
 echo "$PUB" > "$W/etc/omniaxis/portal-signing.pub"
 chmod 0644 "$W/etc/omniaxis/portal-signing.pub"
-say "portal public key ($PORTAL_KEY_ID): $PUB"
+say "portal public key ($PORTAL_KEY_ID, $SCDC_ENVIRONMENT): $PUB"
 
 # 4. Relay log directory read by logcollector (which runs as root).
 install -d -m 2750 /var/log/omniaxis-scdc
@@ -72,7 +75,7 @@ chmod 0640 /var/log/omniaxis-scdc/*.log
 CONF="$W/etc/ossec.conf"
 TMP="$(mktemp)"
 sed '/<!-- omniaxis:begin/,/<!-- omniaxis:end -->/d' "$CONF" > "$TMP"
-sed -e "s#@PORTAL_URL@#${PORTAL_URL}#" -e "s#@PORTAL_KEY_ID@#${PORTAL_KEY_ID}#" \
+sed -e "s#@PORTAL_URL@#${PORTAL_URL}#" -e "s#@PORTAL_KEY_ID@#${PORTAL_KEY_ID}#" -e "s#@SCDC_ENVIRONMENT@#${SCDC_ENVIRONMENT}#" \
   "$HERE/ossec-omniaxis.conf.tmpl" >> "$TMP"
 if ! cmp -s "$TMP" "$CONF"; then
   cp -p "$CONF" "$CONF.omniaxis-backup"

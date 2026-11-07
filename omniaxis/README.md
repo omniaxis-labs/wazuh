@@ -14,8 +14,8 @@ gate host (wazuh-agent, product label) ----------------------------^
 | Folder | What |
 |---|---|
 | `ruleset/` | Decoders and rules for SCDC contract events: one group per product, SEV bands (SEV1 = level 13+, SEV2 = 10-12, SEV3 = 7-9, SEV4 = 3-6), escalation on repeats, forgery and relay-health rules. Rules are generated from `tools/products.json`. |
-| `intake-relay/` | The SCDC's only public endpoint. It verifies the signed intake contract and hands events to Wazuh on localhost. |
-| `integrations/custom-scdc-portal/` | integratord script that pushes alerts at level 7 and above, signed with Ed25519, to `admin.omniaxislabs.com/api/wazuh/alerts`. |
+| `intake-relay/` | The SCDC's only public endpoint. It verifies the signed intake contract with the portal's shared verifier (vendored, pinned) and hands events to Wazuh on localhost. |
+| `integrations/custom-scdc-portal/` | integratord script that pushes alerts at level 7 and above to `admin.omniaxislabs.com/api/wazuh/alerts` as the portal's `scdc-alert/1` envelope (`source: "wazuh"`), signed with Ed25519. |
 | `deploy/server/` | Idempotent single-node install for an Ubuntu LTS server at Hetzner US: hardening, Wazuh, OmniAxis config, relay with Caddy, verification. |
 | `deploy/agent/` | Agent enrolment with a product label (first: the gate host). |
 | `deploy/docker/` | Local single-node test stack and the end-to-end test. |
@@ -30,8 +30,9 @@ omniaxis/run-tests.sh   # needs Docker and Node 24
 
 It runs:
 - the rules generator check;
-- 27 `wazuh-logtest` fixtures in a 4.14.9 manager container;
-- 31 relay unit tests and the typecheck;
-- 11 integration tests under Wazuh's bundled Python;
+- 28 `wazuh-logtest` fixtures in a 4.14.9 manager container;
+- 20 relay tests and the typecheck;
+- the shared verifier's own 47 tests (vendored from the portal);
+- 13 integration tests under Wazuh's bundled Python, including the portal's signing test vector byte for byte;
 - the config-edit tests;
-- the end-to-end path: signed event → relay → API → rules → signed portal push.
+- the end-to-end path: signed event → relay → API → rules → signed portal push, with every push checked by the portal's own verifier.

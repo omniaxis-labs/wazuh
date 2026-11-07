@@ -13,7 +13,7 @@ id scdc-intake >/dev/null 2>&1 || useradd --system --no-create-home --home-dir /
 install -d -o root -g scdc-intake -m 0750 /etc/omniaxis-intake
 
 say "ruleset, integration and ossec.conf block"
-OMNIAXIS_DIR="$OMNIAXIS_DIR" PORTAL_URL="$PORTAL_URL" PORTAL_KEY_ID="${PORTAL_KEY_ID:-scdc-wazuh-1}" NO_RESTART=1 \
+OMNIAXIS_DIR="$OMNIAXIS_DIR" PORTAL_URL="$PORTAL_URL" PORTAL_KEY_ID="${PORTAL_KEY_ID:-scdc-wazuh-1}" SCDC_ENVIRONMENT="${SCDC_ENVIRONMENT:-production}" NO_RESTART=1 \
   bash "$DEPLOY_DIR/apply-omniaxis-config.sh"
 
 say "agent enrolment requires a password"
@@ -49,7 +49,6 @@ say "relay API user (event:ingest only)"
 # The relay pins the API's own certificate; give it a copy it can read.
 install -o root -g scdc-intake -m 0640 /var/ossec/api/configuration/ssl/server.crt /etc/omniaxis-intake/wazuh-api.crt
 
-say "portal public key, for the portal's configuration:"
-echo "    key id: ${PORTAL_KEY_ID:-scdc-wazuh-1}"
-echo "    public: $(cat /var/ossec/etc/omniaxis/portal-signing.pub)"
+say "register the portal key (public half only) in omniaxis-labs/omniaxislabs-admin:"
+echo "    pnpm keys add --source wazuh --environment ${SCDC_ENVIRONMENT:-production} --public-key $(cat /var/ossec/etc/omniaxis/portal-signing.pub) --label \"SCDC Wazuh ${PORTAL_KEY_ID:-scdc-wazuh-1}\""
 say "done"

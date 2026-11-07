@@ -3,13 +3,13 @@
 // from its own file (mode 0400) and never appears in the config or logs.
 
 import { readFileSync } from "node:fs";
-import { loadKey, type LoadedKey, type ProductKey } from "./verify.ts";
+import { checkKey, PRODUCTS, type PublicKeyRecord } from "./verify.ts";
 
 export interface RelayConfig {
   listen: { host: string; port: number };
   path: string;
   products: string[];
-  keys: LoadedKey[];
+  keys: PublicKeyRecord[];
   sink: "api" | "file";
   api: { baseUrl: string; user: string; passwordFile: string; caFile?: string };
   intakeLog: string;
@@ -23,7 +23,7 @@ interface RawConfig {
   listen?: { host?: string; port?: number };
   path?: string;
   products?: string[];
-  keys?: ProductKey[];
+  keys?: unknown[];
   sink?: "api" | "file";
   api?: { baseUrl?: string; user?: string; passwordFile?: string; caFile?: string };
   intakeLog?: string;
@@ -35,23 +35,25 @@ interface RawConfig {
 
 export function loadConfig(file: string, env: NodeJS.ProcessEnv = process.env): RelayConfig {
   const raw = JSON.parse(readFileSync(file, "utf8")) as RawConfig;
-  const products = raw.products ?? [];
-  if (products.length === 0) throw new Error("config: products is empty");
-  const keys = (raw.keys ?? []).map(loadKey);
-  for (const k of keys) {
-    if (!products.includes(k.source)) throw new Error(`config: key ${k.keyId} names unknown product ${k.source}`);
+  // The product list is the contract's (the shared verifier's); a config
+  // may narrow it but never add to it.
+  const products = raw.products ?? [...PRODUCTS];
+  for (const p of products) {
+    if (!(PRODUCTS as readonly string[]).includes(p)) throw new Error(`config: unknown product ${p}`);
   }
+  const keys = (raw.keys ?? []).map(checkKey);
   const ids = new Set<string>();
   for (const k of keys) {
-    if (ids.has(k.keyId)) throw new Error(`config: duplicate keyId ${k.keyId}`);
-    ids.add(k.keyId);
+    if (!products.includes(k.source)) throw new Error(`config: key ${k.id} names unlisted product ${k.source}`);
+    if (ids.has(k.id)) throw new Error(`config: duplicate key id ${k.id}`);
+    ids.add(k.id);
   }
   const sink = (env.SCDC_SINK as RelayConfig["sink"]) ?? raw.sink ?? "api";
   if (sink !== "api" && sink !== "file") throw new Error("config: sink must be api or file");
   const host = env.SCDC_LISTEN_HOST ?? raw.listen?.host ?? "127.0.0.1";
   return {
     listen: { host, port: Number(env.SCDC_LISTEN_PORT ?? raw.listen?.port ?? 8787) },
-    path: raw.path ?? "/v1/events",
+    path: raw.path ?? "/api/intake/v1",
     products,
     keys,
     sink,

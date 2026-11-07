@@ -16,15 +16,15 @@ import { dirname } from "node:path";
 import { request as httpsRequest } from "node:https";
 import { request as httpRequest, type IncomingMessage } from "node:http";
 import { readFileSync } from "node:fs";
-import type { ScdcEvent, LoadedKey } from "./verify.ts";
+import type { ScdcEvent, PublicKeyRecord } from "./verify.ts";
 
 export const LINE_PREFIX = "omniaxis-scdc: ";
 export const API_MAX_BATCH = 100;
 // 30/min is the hard cap; keep a margin for the token refresh and clock skew.
 export const API_MIN_INTERVAL_MS = 2_200;
 
-/** The single line Wazuh sees. Built only from validated fields. */
-export function toWazuhLine(ev: ScdcEvent, key: LoadedKey, receivedAt: Date): string {
+/** The single line Wazuh sees. Built only from fields the verifier allowlisted. */
+export function toWazuhLine(ev: ScdcEvent, key: PublicKeyRecord, receivedAt: Date): string {
   const out: Record<string, unknown> = {
     specversion: ev.specversion,
     id: ev.id,
@@ -36,12 +36,12 @@ export function toWazuhLine(ev: ScdcEvent, key: LoadedKey, receivedAt: Date): st
     severity: ev.severity,
     dedupe_key: ev.dedupe_key,
     title: ev.title,
-    refs: ev.refs,
   };
-  if (ev.counts) out.counts = ev.counts;
+  if (Object.keys(ev.refs).length) out.refs = ev.refs;
+  if (Object.keys(ev.counts).length) out.counts = ev.counts;
   if (ev.reason) out.reason = ev.reason;
-  if (ev.ocsf_class_uid !== undefined) out.ocsf_class_uid = ev.ocsf_class_uid;
-  out.key_id = key.keyId;
+  if (ev.ocsf_class_uid !== null) out.ocsf_class_uid = ev.ocsf_class_uid;
+  out.key_id = key.id;
   out.received_at = receivedAt.toISOString();
   // JSON.stringify escapes every control character, so this is one line.
   return LINE_PREFIX + JSON.stringify(out);

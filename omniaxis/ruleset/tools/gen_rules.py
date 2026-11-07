@@ -155,8 +155,8 @@ def render() -> str:
 
   <rule id="100902" level="10">
     <if_sid>100901</if_sid>
-    <field name="reason">^source_mismatch$</field>
-    <description>SCDC intake: a valid product key signed an event for another product ($(claimed_source))</description>
+    <field name="reason">^source_mismatch$|^environment_mismatch$</field>
+    <description>SCDC intake: a valid product key signed an event for another product or environment ($(claimed_source) $(claimed_environment))</description>
     <group>scdc,scdc_relay,scdc_sev2,</group>
   </rule>
 

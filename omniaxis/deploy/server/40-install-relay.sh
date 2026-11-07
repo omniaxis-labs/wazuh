@@ -28,8 +28,12 @@ ln -sfn "$NODE_DIR" /opt/node
 # --- Relay code ---------------------------------------------------------------
 say "installing relay code to /opt/omniaxis-intake-relay"
 install -d -o root -g root -m 0755 /opt/omniaxis-intake-relay
-rsync_like() { rm -rf /opt/omniaxis-intake-relay/src && cp -r "$OMNIAXIS_DIR/intake-relay/src" /opt/omniaxis-intake-relay/src; }
-rsync_like
+# The relay and the shared verifier it imports (vendored from the portal).
+rm -rf /opt/omniaxis-intake-relay/src /opt/omniaxis-intake-relay/vendor
+cp -r "$OMNIAXIS_DIR/intake-relay/src" /opt/omniaxis-intake-relay/src
+install -d -o root -g root -m 0755 /opt/omniaxis-intake-relay/vendor/scdc-verifier
+cp -r "$OMNIAXIS_DIR/intake-relay/vendor/scdc-verifier/src" /opt/omniaxis-intake-relay/vendor/scdc-verifier/src
+install -o root -g root -m 0644 "$OMNIAXIS_DIR/intake-relay/vendor/scdc-verifier/VENDORED.md" /opt/omniaxis-intake-relay/vendor/scdc-verifier/
 install -o root -g root -m 0644 "$OMNIAXIS_DIR/intake-relay/package.json" /opt/omniaxis-intake-relay/
 [ -f "$OMNIAXIS_DIR/intake-relay/README.md" ] && install -o root -g root -m 0644 "$OMNIAXIS_DIR/intake-relay/README.md" /opt/omniaxis-intake-relay/
 chown -R root:root /opt/omniaxis-intake-relay; chmod -R go-w /opt/omniaxis-intake-relay
@@ -38,12 +42,10 @@ chown -R root:root /opt/omniaxis-intake-relay; chmod -R go-w /opt/omniaxis-intak
 CFG=/etc/omniaxis-intake/config.json
 if [ ! -f "$CFG" ]; then
   say "writing $CFG with no product keys yet (add them per the runbook)"
-  products="$(python3 -c 'import json,sys; print(json.dumps(json.load(open(sys.argv[1]))["products"]))' "$OMNIAXIS_DIR/ruleset/tools/products.json")"
   cat > "$CFG" <<EOF
 {
   "listen": { "host": "127.0.0.1", "port": 8787 },
-  "path": "/v1/events",
-  "products": $products,
+  "path": "/api/intake/v1",
   "keys": [],
   "sink": "api",
   "api": {
@@ -102,5 +104,5 @@ mv /etc/caddy/Caddyfile.new /etc/caddy/Caddyfile
 # The admin endpoint is off, so restart rather than reload.
 systemctl enable caddy >/dev/null
 systemctl restart caddy
-say "Caddy serving https://${SCDC_INTAKE_HOSTNAME}/v1/events"
+say "Caddy serving https://${SCDC_INTAKE_HOSTNAME}/api/intake/v1"
 say "done"

@@ -19,6 +19,7 @@ services:
       API_PASSWORD: ${E2E_API_PASSWORD:?run via e2e.sh}
       PORTAL_URL: http://mock-portal:9000/api/wazuh/alerts
       PORTAL_KEY_ID: scdc-wazuh-test
+      SCDC_ENVIRONMENT: production
       # integratord passes its environment to the integration; this lets the
       # script post to the plain-HTTP mock portal. Never set in production.
       SCDC_ALLOW_HTTP_FOR_TESTS: "1"

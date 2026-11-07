@@ -1,8 +1,8 @@
 <!-- omniaxis:begin (managed by omniaxis/deploy; edits inside this block are overwritten) -->
 <ossec_config>
-  <!-- Every alert raised on the SCDC host itself names it as the product. -->
+  <!-- Alerts raised on the SCDC host itself are about company infrastructure. -->
   <labels>
-    <label key="product">scdc</label>
+    <label key="product">company</label>
   </labels>
 
   <!-- Intake relay: JSON-lines fallback sink and the relay's own log.
@@ -24,7 +24,7 @@
     <hook_url>@PORTAL_URL@</hook_url>
     <level>7</level>
     <alert_format>json</alert_format>
-    <options>{"key_file": "/var/ossec/etc/omniaxis/portal-signing.key", "key_id": "@PORTAL_KEY_ID@"}</options>
+    <options>{"key_file": "/var/ossec/etc/omniaxis/portal-signing.key", "key_id": "@PORTAL_KEY_ID@", "environment": "@SCDC_ENVIRONMENT@"}</options>
   </integration>
 </ossec_config>
 <!-- omniaxis:end -->

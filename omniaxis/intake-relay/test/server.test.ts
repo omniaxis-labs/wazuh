@@ -12,7 +12,6 @@ import { loadConfig } from "../src/config.ts";
 import { producer, event, signedHeaders } from "./helpers.ts";
 
 const mw = producer("musterward");
-const products = ["musterward", "omniaxis", "rackhand", "crosswalk"];
 
 class MemorySink implements Sink {
   readonly name = "memory";
@@ -30,8 +29,7 @@ function startRelay(opts: { sink?: Sink; ratePerMinute?: number; trustProxy?: bo
   const logs: Record<string, unknown>[] = [];
   const server = createRelay({
     keys: [mw.key],
-    products,
-    path: "/v1/events",
+    path: "/api/intake/v1",
     sink,
     dedupe: new Dedupe(),
     relayLog: (f) => logs.push(f),
@@ -47,7 +45,7 @@ function startRelay(opts: { sink?: Sink; ratePerMinute?: number; trustProxy?: bo
 }
 
 async function post(url: string, body: string, headers: Record<string, string>) {
-  const res = await fetch(`${url}/v1/events`, { method: "POST", body, headers });
+  const res = await fetch(`${url}/api/intake/v1`, { method: "POST", body, headers });
   return { status: res.status, json: (await res.json()) as Record<string, unknown> };
 }
 
@@ -67,6 +65,7 @@ test("accepts, hands one prefixed line to the sink, and dedupes retries", async 
   const out = JSON.parse(line.slice(LINE_PREFIX.length));
   assert.equal(out.product, "musterward");
   assert.equal(out.key_id, "musterward-test");
+  assert.equal(out.refs.resource, "musterward-web");
   assert.equal("email" in out, false);
   assert.ok(out.received_at);
   r.server.close();
@@ -84,6 +83,11 @@ test("refusals return the right status and are logged for Wazuh", async () => {
     r.logs.map((l) => [l.event, l.reason, l.claimed_source]),
     [["refused", "source_mismatch", "omniaxis"], ["refused", "bad_signature", undefined]],
   );
+  // A secret anywhere in the body is refused, even in a field the allowlist would drop.
+  const leaky = JSON.stringify(event({ id: "evt_leak", note: "AKIAABCDEFGHIJKLMNOP" }));
+  const leak = await post(r.url, leaky, signedHeaders(mw, leaky));
+  assert.equal(leak.status, 422);
+  assert.equal(leak.json.error, "secret_detected");
   assert.equal(r.sink.lines.length, 0);
   r.server.close();
 });
@@ -98,7 +102,7 @@ test("rejects oversize bodies with 413 without reading them all", async () => {
 
 test("rejects wrong method, path and content type", async () => {
   const r = await startRelay();
-  assert.equal((await fetch(`${r.url}/v1/events`)).status, 405);
+  assert.equal((await fetch(`${r.url}/api/intake/v1`)).status, 405);
   assert.equal((await fetch(`${r.url}/other`, { method: "POST" })).status, 404);
   const body = JSON.stringify(event());
   const res = await post(r.url, body, { ...signedHeaders(mw, body), "content-type": "text/plain" });
@@ -237,22 +241,27 @@ test("ApiSink refuses a non-loopback API address", () => {
 });
 
 test("toWazuhLine never lets field text break the line", () => {
-  const ev = { ...event(), title: "a\u2028b\u0000c" } as unknown as Parameters<typeof toWazuhLine>[0];
+  const ev = { ...event(), title: "a\u2028b\u0000c", refs: {}, counts: {} } as unknown as Parameters<typeof toWazuhLine>[0];
   const line = toWazuhLine(ev, mw.key, new Date(0));
   assert.equal(line.split("\n").length, 1);
 });
 
-test("config loads keys and refuses keys for unlisted products", () => {
+test("config loads keys and refuses bad ones", () => {
   const dir = mkdtempSync(join(tmpdir(), "scdc-"));
-  const raw = mw.key.keyObject.export({ format: "der", type: "spki" }).subarray(12).toString("base64");
   const file = join(dir, "c.json");
-  writeFileSync(file, JSON.stringify({ products, keys: [{ source: "musterward", keyId: "k1", publicKey: raw }] }));
+  writeFileSync(file, JSON.stringify({ keys: [mw.key] }));
   const cfg = loadConfig(file, {});
   assert.equal(cfg.keys.length, 1);
+  assert.deepEqual(cfg.products, ["musterward", "omniaxis", "rackhand", "crosswalk"]);
   assert.equal(cfg.listen.host, "127.0.0.1");
+  assert.equal(cfg.path, "/api/intake/v1");
   assert.equal(cfg.trustProxy, true);
-  writeFileSync(file, JSON.stringify({ products, keys: [{ source: "acme", keyId: "k1", publicKey: raw }] }));
+  writeFileSync(file, JSON.stringify({ products: ["omniaxis"], keys: [mw.key] }));
+  assert.throws(() => loadConfig(file, {}), /unlisted product/);
+  writeFileSync(file, JSON.stringify({ products: ["acme"] }));
   assert.throws(() => loadConfig(file, {}), /unknown product/);
+  writeFileSync(file, JSON.stringify({ keys: [mw.key, mw.key] }));
+  assert.throws(() => loadConfig(file, {}), /duplicate/);
 });
 
 test("relay log lines carry the decoder prefix", () => {

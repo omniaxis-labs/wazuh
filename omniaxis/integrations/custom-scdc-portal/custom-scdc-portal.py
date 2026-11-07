@@ -9,22 +9,25 @@ Called by wazuh-integratord for every alert at or above the configured level
       <hook_url>https://admin.omniaxislabs.com/api/wazuh/alerts</hook_url>
       <level>7</level>
       <alert_format>json</alert_format>
-      <options>{"key_file": "/var/ossec/etc/omniaxis/portal-signing.key", "key_id": "scdc-wazuh-1"}</options>
+      <options>{"key_file": "/var/ossec/etc/omniaxis/portal-signing.key", "key_id": "scdc-wazuh-1", "environment": "production"}</options>
     </integration>
 
-The request uses the same Standard Webhooks Ed25519 scheme as the intake
-contract (design section 4), in the other direction:
+Body: the portal's `scdc-alert/1` envelope (source "wazuh"), built from the
+alert through the same allowlist the portal enforces. Headers: Standard
+Webhooks, Ed25519 (`v1a`), over "id.timestamp.body":
 
-    webhook-id:        wza_<alert id>        (idempotency key; the portal dedupes)
+    webhook-id:        wz_<alert id>         (equals the body's id; the portal dedupes)
     webhook-timestamp: <unix seconds>
-    webhook-signature: v1a,<std base64 Ed25519 over "id.timestamp.body">
+    webhook-signature: v1a,<std base64 signature>
 
 The private key never appears on the command line or in ossec.conf: options
-carry only its path. The portal holds the public key.
+carry only its path. The portal holds the public key (whpk_...), registered
+with `pnpm keys add --source wazuh --environment <env> --public-key whpk_...`.
 
-Delivery: three attempts with backoff inside one run. If all fail, the signed
-body is spooled and re-sent (re-signed, same webhook-id) at the start of the
-next run, oldest first, so a portal outage loses nothing.
+Delivery: three attempts with backoff inside one run. If all fail, the body
+is spooled and re-sent (re-signed, same webhook-id) at the start of the next
+run, oldest first, so a portal outage loses nothing. A 4xx other than 408/429
+is a permanent refusal: logged, not retried.
 
 argv (wazuh-integratord, 4.14): alert_file api_key hook_url [debug] options_file timeout retries
 Empty values can collapse, so arguments are found by shape, as Wazuh's own
@@ -44,9 +47,7 @@ import urllib.request
 WAZUH_PATH = os.environ.get("WAZUH_PATH") or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 LOG_FILE = os.path.join(WAZUH_PATH, "logs", "integrations.log")
 DEFAULT_SPOOL = os.path.join(WAZUH_PATH, "var", "omniaxis", "portal-spool")
-SPECVERSION = "scdc-wazuh/1"
-SOURCE = "scdc-wazuh"
-MAX_BODY = 32 * 1024
+MAX_BODY = 16 * 1024  # the contract limit
 MAX_SPOOL_FILES = 5000
 RESEND_PER_RUN = 25
 
@@ -68,109 +69,135 @@ def debug(msg: str) -> None:
 
 
 # --------------------------------------------------------------------------
-# Alert -> portal payload
+# Alert -> scdc-alert/1 envelope
+#
+# The envelope is the portal's contract (@omniaxis-labs/scdc-verifier,
+# parseAlert; vendored at omniaxis/intake-relay/vendor/scdc-verifier). The
+# patterns below mirror its schema.ts so every push passes the allowlist.
 
-def severity_for_level(level: int) -> str:
+ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
+DOTTED_RE = re.compile(r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+){0,7}$")
+REF_RE = ID_RE
+COUNT_KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
+GROUP_RE = re.compile(r"^[a-z0-9_-]{1,40}$")
+ALERT_PRODUCTS = ("musterward", "omniaxis", "rackhand", "crosswalk", "company")
+ENVIRONMENTS = ("production", "preview")
+CONTROL_RE = re.compile(r"[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2064\ufeff]")
+
+
+def severity_for_level(level: int):
     if level >= 13:
         return "sev1"
     if level >= 10:
         return "sev2"
     if level >= 7:
         return "sev3"
-    return "sev4"
+    if level >= 3:
+        return "sev4"
+    return None
 
 
-# Fields copied from SCDC contract events (data.*). Product events are ids
-# only by contract, so these are safe to forward whole.
-SCDC_DATA_FIELDS = (
-    "source", "product", "environment", "type", "time", "severity", "dedupe_key", "title",
-    "refs", "counts", "reason", "key_id", "received_at", "id",
-    # relay log fields
-    "event", "srcip", "claimed_source", "key_source",
-)
-# Fields kept from host alerts (agents, the manager itself).
-HOST_DATA_FIELDS = (
-    "srcip", "srcport", "dstip", "dstport", "srcuser", "dstuser", "user", "protocol", "action",
-    "status", "command", "url", "id", "system_name", "title", "file", "uid", "gid", "audit",
-)
-MAX_TEXT = 2048
+def plain(text, limit: int) -> str:
+    t = re.sub(r"\s+", " ", CONTROL_RE.sub(" ", str(text or ""))).strip()
+    return t if len(t) <= limit else t[: limit - 1].rstrip() + "\u2026"
 
 
-def _clip(value, depth: int = 0):
-    if isinstance(value, str):
-        return value[:MAX_TEXT]
-    if isinstance(value, dict) and depth < 3:
-        return {str(k)[:64]: _clip(v, depth + 1) for k, v in list(value.items())[:40]}
-    if isinstance(value, list) and depth < 3:
-        return [_clip(v, depth + 1) for v in value[:40]]
-    if isinstance(value, (int, float, bool)) or value is None:
-        return value
-    return str(value)[:MAX_TEXT]
+def iso_utc(ts) -> str:
+    """Wazuh '2026-11-07T05:12:50.123+0000' -> '2026-11-07T05:12:50.123Z'."""
+    from datetime import datetime, timezone
+    try:
+        dt = datetime.strptime(str(ts), "%Y-%m-%dT%H:%M:%S.%f%z").astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        dt = datetime.now(timezone.utc)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt.microsecond // 1000:03d}Z"
 
 
 def product_for(alert: dict) -> str:
     data = alert.get("data") or {}
     labels = (alert.get("agent") or {}).get("labels") or {}
     for candidate in (data.get("product"), labels.get("product")):
-        if isinstance(candidate, str) and re.fullmatch(r"[a-z][a-z0-9-]{1,30}", candidate):
+        if candidate in ALERT_PRODUCTS:
             return candidate
-    return "unlabelled"
+    # Hosts, the SCDC itself and anything unlabelled are company infrastructure.
+    return "company"
 
 
-def build_payload(alert: dict, webhook_id: str) -> dict:
+def build_payload(alert: dict, webhook_id: str, environment: str) -> dict:
     rule = alert.get("rule") or {}
     level = int(rule.get("level") or 0)
-    groups = [g for g in (rule.get("groups") or []) if isinstance(g, str)]
+    rule_id = str(rule.get("id", ""))
+    groups = [g for g in (rule.get("groups") or []) if isinstance(g, str) and GROUP_RE.match(g)][:16]
     data = alert.get("data") or {}
-    is_scdc = "scdc" in groups
-    fields = SCDC_DATA_FIELDS if is_scdc else HOST_DATA_FIELDS
-    kept = {k: _clip(data[k]) for k in fields if k in data}
     agent = alert.get("agent") or {}
-    payload = {
-        "specversion": SPECVERSION,
-        "id": webhook_id,
-        "source": SOURCE,
-        "product": product_for(alert),
-        "severity": severity_for_level(level),
-        "environment": data.get("environment") if data.get("environment") in ("production", "preview") else "production",
-        "alert": {
-            "id": str(alert.get("id", "")),
-            "timestamp": alert.get("timestamp"),
-            "rule": {
-                "id": str(rule.get("id", "")),
-                "level": level,
-                "description": _clip(rule.get("description", "")),
-                "groups": groups[:20],
-                "firedtimes": rule.get("firedtimes"),
-                "mitre": _clip(rule.get("mitre")) if rule.get("mitre") else None,
-            },
-            "agent": {
-                "id": agent.get("id"),
-                "name": agent.get("name"),
-                "labels": _clip(agent.get("labels")) if agent.get("labels") else None,
-            },
-            "manager": (alert.get("manager") or {}).get("name"),
-            "location": _clip(alert.get("location", "")),
-            "decoder": (alert.get("decoder") or {}).get("name"),
-            "data": kept,
-        },
-    }
-    if is_scdc and isinstance(data.get("dedupe_key"), str):
-        payload["dedupe_key"] = f"{payload['product']}:{data['dedupe_key']}"[:256]
+    decoder = (alert.get("decoder") or {}).get("name")
+    is_event = decoder == "omniaxis-scdc" and "scdc" in groups
+    is_relay = decoder == "omniaxis-scdc-relay"
+
+    if is_event:
+        type_ = data.get("type")
+        title = data.get("title") or rule.get("description")
+        dedupe = data.get("dedupe_key")
+        product_env = data.get("environment")
+    elif is_relay:
+        type_ = f"scdc.intake.{data.get('event', 'unknown')}"
+        title = rule.get("description")
+        dedupe = f"scdc.intake.{data.get('event', 'unknown')}:{data.get('srcip', '')}"
+        product_env = "production"
     else:
-        # Group host alerts by rule and agent so repeats land on one incident.
-        payload["dedupe_key"] = f"wazuh:{rule.get('id', '')}:{agent.get('id', '')}"
-    if not is_scdc and alert.get("full_log"):
-        payload["alert"]["full_log"] = _clip(alert["full_log"])
+        type_ = f"wazuh.rule.{rule_id}"
+        title = rule.get("description")
+        dedupe = f"wazuh.rule.{rule_id}:{agent.get('name', '')}"
+        product_env = "production"
+
+    if not (isinstance(type_, str) and DOTTED_RE.match(type_) and len(type_) <= 100):
+        type_ = f"wazuh.rule.{rule_id}" if rule_id.isdigit() else "wazuh.alert"
+    payload = {
+        "specversion": "scdc-alert/1",
+        "id": webhook_id,
+        "source": "wazuh",
+        "environment": environment,
+        "time": iso_utc(alert.get("timestamp")),
+        "product": product_for(alert),
+        "product_environment": product_env if product_env in ENVIRONMENTS else "production",
+        "type": type_,
+        "title": plain(title, 140) or f"Wazuh rule {rule_id}",
+        "dedupe_key": plain(dedupe, 200) or f"wazuh.rule.{rule_id}",
+        "severity": severity_for_level(level),
+        "rule": {"id": rule_id, "level": level, "groups": groups},
+    }
+    name = agent.get("name")
+    if isinstance(name, str) and REF_RE.match(name):
+        payload["agent"] = {"name": name}
+    if is_event:
+        if isinstance(data.get("id"), str) and ID_RE.match(data["id"]):
+            payload["event_id"] = data["id"]
+        refs = {k: v for k, v in (data.get("refs") or {}).items()
+                if k in ("tenant_ref", "actor_ref", "resource") and isinstance(v, str) and REF_RE.match(v)}
+        if refs:
+            payload["refs"] = refs
+        counts = {}
+        for k, v in list((data.get("counts") or {}).items())[:16]:
+            # The JSON decoder hands numbers back as strings.
+            try:
+                n = int(v)
+            except (TypeError, ValueError):
+                continue
+            if COUNT_KEY_RE.match(k) and n >= 0:
+                counts[k] = n
+        if counts:
+            payload["counts"] = counts
+    reason = data.get("reason")
+    if (is_event or is_relay) and isinstance(reason, str) and DOTTED_RE.match(reason):
+        payload["reason"] = reason
     return payload
 
 
 def webhook_id_for(alert: dict) -> str:
     raw = str(alert.get("id") or "")
-    safe = re.sub(r"[^A-Za-z0-9_]", "_", raw)[:100]
+    safe = re.sub(r"[^A-Za-z0-9_.]", "_", raw)[:120]
     if not safe:
         safe = f"t{int(time.time() * 1000)}"
-    return f"wza_{safe}"
+    return f"wz_{safe}"
 
 
 # --------------------------------------------------------------------------
@@ -193,6 +220,13 @@ def load_private_key(path: str):
     return Ed25519PrivateKey.from_private_bytes(seed)
 
 
+def public_key_whpk(private_key) -> str:
+    """The portal's key format: whpk_<standard base64 of the raw 32 bytes>."""
+    from cryptography.hazmat.primitives import serialization
+    raw = private_key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw)
+    return "whpk_" + base64.b64encode(raw).decode()
+
+
 def sign_headers(key, webhook_id: str, body: bytes, now: int | None = None) -> dict:
     ts = str(int(now if now is not None else time.time()))
     sig = key.sign(webhook_id.encode() + b"." + ts.encode() + b"." + body)
@@ -201,7 +235,7 @@ def sign_headers(key, webhook_id: str, body: bytes, now: int | None = None) -> d
         "webhook-timestamp": ts,
         "webhook-signature": "v1a," + base64.b64encode(sig).decode(),
         "content-type": "application/json",
-        "user-agent": "omniaxis-scdc-wazuh/1",
+        "user-agent": "omniaxis-scdc-wazuh/1 (scdc-alert/1)",
     }
 
 
@@ -221,7 +255,6 @@ class Delivery:
 
     def post(self, webhook_id: str, body: bytes) -> int:
         headers = sign_headers(self.key, webhook_id, body)
-        headers["x-scdc-key-id"] = self.key_id
         req = urllib.request.Request(self.url, data=body, headers=headers, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as res:
@@ -323,21 +356,23 @@ def main(argv: list[str]) -> int:
 
     with open(args["alert_file"]) as f:
         alert = json.load(f)
-    min_level = int(options.get("min_level", 7))
+    min_level = max(3, int(options.get("min_level", 7)))
     if int((alert.get("rule") or {}).get("level") or 0) < min_level:
         debug("below min_level; skipped")
         return 0
+    environment = options.get("environment", "production")
+    if environment not in ENVIRONMENTS:
+        raise ValueError("options.environment must be production or preview")
 
     delivery.resend_spooled()
     webhook_id = webhook_id_for(alert)
-    body = json.dumps(build_payload(alert, webhook_id), separators=(",", ":"), sort_keys=True).encode()
+    payload = build_payload(alert, webhook_id, environment)
+    body = json.dumps(payload, separators=(",", ":"), sort_keys=True, ensure_ascii=False).encode()
     if len(body) > MAX_BODY:
-        # Drop the bulky parts rather than the alert.
-        payload = json.loads(body)
-        payload["alert"].pop("full_log", None)
-        payload["alert"]["data"] = {}
-        payload["truncated"] = True
-        body = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+        # Cannot happen with the field limits above; drop optional parts rather than the alert.
+        for k in ("refs", "counts", "agent"):
+            payload.pop(k, None)
+        body = json.dumps(payload, separators=(",", ":"), sort_keys=True, ensure_ascii=False).encode()
     if not delivery.deliver(webhook_id, body):
         delivery.spool(webhook_id, body)
     return 0

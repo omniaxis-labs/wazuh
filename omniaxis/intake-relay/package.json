@@ -10,11 +10,13 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning src/main.ts",
     "test": "node --disable-warning=ExperimentalWarning --test test/*.test.ts",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "test:vendor": "vitest run --root vendor/scdc-verifier"
   },
   "license": "UNLICENSED",
   "devDependencies": {
     "typescript": "5.9.3",
-    "@types/node": "24.10.1"
+    "@types/node": "24.10.1",
+    "vitest": "5.0.5"
   }
 }

@@ -5,28 +5,15 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { appendFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { verifyIntake, DEFAULT_MAX_BYTES, type LoadedKey, type RefusalReason } from "./verify.ts";
+import { verifyEvent, MAX_BODY_BYTES, type PublicKeyRecord } from "./verify.ts";
 import { Dedupe } from "./dedupe.ts";
 import { toWazuhLine, type Sink } from "./sink.ts";
 
 export const RELAY_PREFIX = "omniaxis-scdc-relay: ";
 
-const STATUS: Record<RefusalReason, number> = {
-  too_large: 413,
-  bad_headers: 400,
-  stale: 400,
-  bad_signature: 401,
-  unknown_source: 403,
-  source_mismatch: 403,
-  environment_mismatch: 403,
-  bad_body: 400,
-  id_mismatch: 400,
-  secret_like: 422,
-};
 
 export interface RelayDeps {
-  keys: LoadedKey[];
-  products: string[];
+  keys: PublicKeyRecord[];
   path: string;
   sink: Sink;
   dedupe: Dedupe;
@@ -34,14 +21,14 @@ export interface RelayDeps {
   trustProxy: boolean;
   ratePerMinute: number;
   now?: () => number; // ms
-  maxBytes?: number;
 }
 
 /** Relay log writer: one prefixed JSON line per event, read by Wazuh. */
 export function fileRelayLog(path: string): (fields: Record<string, unknown>) => void {
   mkdirSync(dirname(path), { recursive: true });
   return (fields) => {
-    const line = RELAY_PREFIX + JSON.stringify({ product: "scdc-intake", ...fields, at: new Date().toISOString() });
+    // The relay is company infrastructure: alerts about it go to "company".
+    const line = RELAY_PREFIX + JSON.stringify({ product: "company", component: "scdc-intake", ...fields, at: new Date().toISOString() });
     try {
       appendFileSync(path, line + "\n", { mode: 0o640 });
     } catch {
@@ -125,9 +112,8 @@ function readBody(req: IncomingMessage, limit: number): Promise<Buffer | "too_la
 }
 
 export function createRelay(d: RelayDeps): Server {
-  const allowed = new Set(d.products);
   const limiter = new RateLimiter(d.ratePerMinute);
-  const maxBytes = d.maxBytes ?? DEFAULT_MAX_BYTES;
+  const maxBytes = MAX_BODY_BYTES;
   const now = d.now ?? Date.now;
 
   const handler = async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
@@ -158,27 +144,26 @@ export function createRelay(d: RelayDeps): Server {
       return send(res, 413, { error: "too_large" });
     }
 
-    const result = verifyIntake({
-      headers: req.headers,
-      rawBody: body,
-      keys: d.keys,
-      allowedSources: allowed,
-      nowSeconds: Math.floor(now() / 1000),
-      maxBytes,
-    });
+    const result = verifyEvent(req.headers, body, d.keys, now());
     if (!result.ok) {
-      d.relayLog({
-        event: "refused",
-        reason: result.reason,
-        srcip: ip,
-        ...(result.detail ? { detail: result.detail } : {}),
-        ...(result.key ? { key_id: result.key.keyId, key_source: result.key.source } : {}),
-        ...(result.claimedSource ? { claimed_source: result.claimedSource } : {}),
-      });
-      return send(res, STATUS[result.reason], { error: result.reason });
+      const fields: Record<string, unknown> = { event: "refused", reason: result.reason, srcip: ip };
+      if (result.field) fields.field = result.field;
+      if (result.reason === "source_mismatch" || result.reason === "environment_mismatch") {
+        // The signature verified, so the body is a real product's: name what it claimed.
+        try {
+          const claimed = JSON.parse(body.toString("utf8")) as { source?: unknown; environment?: unknown };
+          if (typeof claimed.source === "string") fields.claimed_source = claimed.source.slice(0, 32);
+          if (typeof claimed.environment === "string") fields.claimed_environment = claimed.environment.slice(0, 16);
+        } catch {
+          /* already verified as JSON by the verifier */
+        }
+      }
+      d.relayLog(fields);
+      return send(res, result.status, { error: result.reason });
     }
 
-    const { event, key } = result;
+    const event = result.body;
+    const key = result.key;
     if (!d.dedupe.firstSeen(event.source, event.id, now())) {
       return send(res, 200, { status: "duplicate", id: event.id });
     }
@@ -186,7 +171,7 @@ export function createRelay(d: RelayDeps): Server {
       await d.sink.push([toWazuhLine(event, key, new Date(now()))]);
     } catch (e) {
       d.dedupe.forget(event.source, event.id);
-      d.relayLog({ event: "sink_failed", reason: "durable_write_failed", srcip: ip, key_id: key.keyId });
+      d.relayLog({ event: "sink_failed", reason: "durable_write_failed", srcip: ip, key_id: key.id });
       return send(res, 503, { error: "unavailable" });
     }
     return send(res, 202, { status: "accepted", id: event.id });

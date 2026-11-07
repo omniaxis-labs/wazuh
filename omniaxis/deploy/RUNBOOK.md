@@ -28,11 +28,11 @@ The steps can each be run again on their own; every one converges:
 |---|---|
 | `10-harden-host.sh` | Security updates now and unattended (security only; Wazuh and Caddy excluded). SSH keys only, with a guard that refuses if no key is installed. ufw denies everything incoming except 22 from `ADMIN_SSH_CIDRS`, 1514-1515 from `AGENT_CIDRS`, and 80/443. Kernel network settings. |
 | `20-install-wazuh.sh` | Official installation assistant (`packages.wazuh.com/4.14/wazuh-install.sh -a`), which installs the signed packages. Holds the packages so they never upgrade unattended. Binds the API to `127.0.0.1:55000` and the dashboard to `127.0.0.1:8443`, and checks that the indexer is on `127.0.0.1`. Passwords stay in `/root/omniaxis-scdc/wazuh-install-files.tar`. |
-| `30-configure-wazuh.sh` | OmniAxis ruleset, portal integration and its Ed25519 signing key, the managed `ossec.conf` block (product label `scdc` on the server's own alerts, relay log files, the integration), password-protected agent enrolment, and the relay's API user (`event:ingest` only). |
+| `30-configure-wazuh.sh` | OmniAxis ruleset, portal integration and its Ed25519 signing key, the managed `ossec.conf` block (product label `company` on the server's own alerts, relay log files, the integration), password-protected agent enrolment, and the relay's API user (`event:ingest` only). |
 | `40-install-relay.sh` | Node (pinned, SHA-256 checked) in `/opt/node`, the relay in `/opt/omniaxis-intake-relay`, its sandboxed systemd unit, and Caddy (official signed repository) on 443 with one path, a 16 KB body limit and automatic TLS. |
 | `50-verify.sh` | Read-only checks: every internal port is loopback only, firewall, SSH, services, file permissions, and that the relay refuses and logs an unsigned request. |
 
-At the end, `30-configure-wazuh.sh` prints the **portal public key**. Give it, with its key id, to the portal (omniaxis-labs/omniaxislabs-admin) as the trusted key for `/api/wazuh/alerts`. The private half never leaves the server.
+At the end, `30-configure-wazuh.sh` prints the **portal public key** (`whpk_…`) as a ready command for the portal repository: `pnpm keys add --source wazuh --environment production --public-key whpk_… --label "…"`. The private half never leaves the server.
 
 ## 2. Reaching the dashboard (private only)
 
@@ -55,16 +55,16 @@ tar -O -xf /root/omniaxis-scdc/wazuh-install-files.tar wazuh-install-files/wazuh
 
 Each product signs with its own Ed25519 key per environment. The SCDC holds **public keys only**.
 
-1. The product generates its key pair in its own secret store and hands over the **public** key as raw 32-byte base64.
+1. The product generates its key pair in its own secret store and hands over the **public** key as `whpk_<standard base64 of the raw 32 bytes>`, the format the portal uses.
 2. Add it to `/etc/omniaxis-intake/config.json` under `keys`:
    ```json
-   { "source": "musterward", "environment": "production", "keyId": "mw-prod-2026-11", "publicKey": "<base64>" }
+   { "id": "mw-prod-2026-11", "source": "musterward", "environment": "production", "publicKey": "whpk_<base64>" }
    ```
 3. Run `40-install-relay.sh`. It validates the config and restarts the relay.
 
 **Rotation.** Add the new key next to the old one. The product then sends both signatures (`v1a,<old> v1a,<new>`). Remove the old key once the product has switched.
 
-**A new product** goes in `ruleset/tools/products.json`; append only, never reorder. Then run `python3 ruleset/tools/gen_rules.py`, run the tests, merge, and run `30-configure-wazuh.sh` and `40-install-relay.sh` on the server.
+**A new product** must first be added to the shared verifier in the portal repository (its `PRODUCTS` list), then vendored again here (`intake-relay/vendor/scdc-verifier/VENDORED.md`), then appended to `ruleset/tools/products.json`; append only, never reorder. A test fails if the two lists differ. Then run `python3 ruleset/tools/gen_rules.py`, run the tests, merge, and run `30-configure-wazuh.sh` and `40-install-relay.sh` on the server.
 
 ## 4. Enrolling the gate host
 
@@ -76,12 +76,12 @@ On the gate host, as root:
 
 ```bash
 git clone --branch omniaxis/4.14 --filter=blob:none https://github.com/omniaxis-labs/wazuh.git /opt/omniaxis-wazuh
-SCDC_MANAGER=<scdc server address> PRODUCT=gate ENROL_PASSWORD_FILE=/root/scdc-authd.pass \
+SCDC_MANAGER=<scdc server address> PRODUCT=company ENROL_PASSWORD_FILE=/root/scdc-authd.pass \
   /opt/omniaxis-wazuh/omniaxis/deploy/agent/enrol-agent.sh
 shred -u /root/scdc-authd.pass
 ```
 
-The agent carries `product: gate` on every alert. It runs capped at 25% of one CPU and 512 MB, at low priority, because the gate host is busy.
+The agent carries `product: company` on every alert. The portal accepts musterward, omniaxis, rackhand, crosswalk or company, and the gate host is shared company infrastructure; its host name travels as `agent.name`. It runs capped at 25% of one CPU and 512 MB, at low priority, because the gate host is busy.
 
 Once it reports, **retire the OmniAxis SSH forwarder** on the gate host. Do that only after a week of overlap, when the SCDC's sshd alerts match.
 

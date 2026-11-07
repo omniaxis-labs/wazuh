@@ -4,7 +4,7 @@
     "events": [
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
     ],
@@ -15,7 +15,7 @@
         "scdc_relay"
       ],
       "data": {
-        "product": "scdc-intake"
+        "product": "company"
       }
     }
   },
@@ -24,7 +24,7 @@
     "events": [
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"source_mismatch\",\"srcip\":\"203.0.113.9\",\"claimed_source\":\"omniaxis\",\"key_source\":\"musterward\"}",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"source_mismatch\",\"srcip\":\"203.0.113.9\",\"claimed_source\":\"omniaxis\",\"key_source\":\"musterward\"}",
         "repeat": 1
       }
     ],
@@ -38,7 +38,7 @@
     "events": [
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 20
       }
     ],
@@ -52,7 +52,7 @@
     "events": [
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"sink_failed\",\"reason\":\"api_unreachable\",\"srcip\":\"203.0.113.9\"}",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"sink_failed\",\"reason\":\"api_unreachable\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
     ],
@@ -66,7 +66,7 @@
     "events": [
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"started\",\"reason\":\"sink=api\",\"srcip\":\"203.0.113.9\"}",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"started\",\"reason\":\"sink=api\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
     ],
@@ -80,7 +80,7 @@
     "events": [
       {
         "location": "/var/log/other.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}",
         "repeat": 1
       }
     ],
@@ -93,88 +93,101 @@
     "events": [
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.0\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.0\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.1\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.1\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.2\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.2\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.3\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.3\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.4\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.4\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.5\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.5\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.6\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.6\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.7\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.7\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.8\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.8\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.9\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.10\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.10\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.11\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.11\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.12\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.12\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.13\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.13\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.14\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.14\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.15\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.15\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.16\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.16\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.17\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.17\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.18\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.18\"}"
       },
       {
         "location": "/var/log/omniaxis-scdc/relay.log",
-        "log": "omniaxis-scdc-relay: {\"product\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.19\"}"
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"bad_signature\",\"srcip\":\"203.0.113.19\"}"
       }
     ],
     "expect": {
       "rule_id": "100901",
       "level": 4
+    }
+  },
+  {
+    "name": "Key signing for another environment is SEV2",
+    "events": [
+      {
+        "location": "/var/log/omniaxis-scdc/relay.log",
+        "log": "omniaxis-scdc-relay: {\"product\":\"company\",\"component\":\"scdc-intake\",\"event\":\"refused\",\"reason\":\"environment_mismatch\",\"srcip\":\"203.0.113.9\",\"claimed_source\":\"omniaxis\",\"key_source\":\"musterward\"}"
+      }
+    ],
+    "expect": {
+      "rule_id": "100902",
+      "level": 10
     }
   }
 ]

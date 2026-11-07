@@ -27,7 +27,6 @@ setInterval(() => {
 
 const server = createRelay({
   keys: cfg.keys,
-  products: cfg.products,
   path: cfg.path,
   sink,
   dedupe,
