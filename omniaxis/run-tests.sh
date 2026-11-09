@@ -34,6 +34,9 @@ step "deploy: retention and snapshots on a real wazuh-indexer 4.14.9"
 step "deploy: off-host backup (restic, Ubuntu 24.04)"
 "$ROOT/deploy/server/tests/test_backup.sh" 2>/dev/null | grep -E 'ok|FAIL|passed'
 
+step "golden set: planted scenarios through the real 4.14.9 ruleset"
+"$ROOT/golden/test_export.sh" | grep -E 'ok|FAIL|golden set'
+
 step "end to end: relay -> Wazuh API -> rules -> signed portal push"
 "$ROOT/deploy/docker/e2e.sh" 2>&1 | grep -E '^\[e2e\]|ok|->|product'
 
