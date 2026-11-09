@@ -46,6 +46,15 @@ cat > $T/pw.txt <<EOF
 EOF
 got=$(grep -A1 -E "api_username: '"'"'wazuh'"'"'\s*$" $T/pw.txt | sed -n -E "s/^\s*api_password: '"'"'(.*)'"'"'\s*$/\1/p" | head -n1)
 [ "$got" = "Api.Adm1n*Pw?" ] && ok "API admin password extracted (not wazuh-wui, not indexer)" || bad "password extraction got [$got]"
+got=$(grep -A1 -E "indexer_username: '"'"'admin'"'"'\s*$" $T/pw.txt | sed -n -E "s/^\s*indexer_password: '"'"'(.*)'"'"'\s*$/\1/p" | head -n1)
+[ "$got" = "Idx.Pass*1" ] && ok "indexer admin password extracted" || bad "indexer password extraction got [$got]"
+
+# 3b. Indexer snapshot path, as 45-retention-backup.sh sets it.
+printf "network.host: \"127.0.0.1\"\nnode.name: \"node-1\"\npath.data: /var/lib/wazuh-indexer\n" > $T/os.yml
+set_yaml_key $T/os.yml path.repo "[\"/var/lib/wazuh-indexer-snapshots\"]"
+set_yaml_key $T/os.yml path.repo "[\"/var/lib/wazuh-indexer-snapshots\"]"
+[ "$(grep -c "^path.repo:" $T/os.yml)" = 1 ] && grep -qx "path.repo: \[\"/var/lib/wazuh-indexer-snapshots\"\]" $T/os.yml && grep -qx "path.data: /var/lib/wazuh-indexer" $T/os.yml \
+  && ok "indexer path.repo set once, path.data untouched" || { cat $T/os.yml; bad "path.repo edit"; }
 
 # 4. Agent enrolment password switch on the real ossec.conf.
 cp /var/ossec/etc/ossec.conf $T/ossec.conf

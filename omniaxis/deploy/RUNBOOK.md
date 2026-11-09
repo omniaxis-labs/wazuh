@@ -8,7 +8,8 @@ Nothing here has run against a real server yet. The scripts are checked with `ba
 
 1. **Create the server.** Hetzner Cloud, location **Ashburn (ash)**, Ubuntu 24.04. Take at least CPX41 (8 vCPU, 16 GB) or CCX23. Wazuh's own floor for 1 to 25 agents and 90 days of alerts is 4 vCPU, 8 GiB and 50 GB (documentation.wazuh.com/4.14/quickstart.html). The indexer is the memory user, so take the larger size. Add your SSH key at creation. Enable backups.
 2. **DNS.** Add an A record (and AAAA if you use IPv6) for `intake.security.omniaxislabs.com`, pointing at the server.
-3. **Hetzner Cloud firewall** (optional, a second layer behind ufw). Allow 22 from your admin addresses, 80 and 443 from anywhere, and 1514-1515 from the gate host.
+3. **Off-host backup store** (US only, and not at Hetzner, so one account or outage cannot take both). For example an S3 bucket in `us-east-1` with versioning or object lock, and an access key limited to that bucket. On the server: copy `deploy/server/backup.env.example` to `/etc/omniaxis-scdc/backup.env` (root, 0600), fill it in there, and run `45-retention-backup.sh` again. It makes `/etc/omniaxis-scdc/restic-password`: **copy that into your password manager at once**; without it no backup can be restored. Until then `50-verify.sh` warns that the off-host backup is not configured.
+4. **Hetzner Cloud firewall** (optional, a second layer behind ufw). Allow 22 from your admin addresses, 80 and 443 from anywhere, and 1514-1515 from the gate host.
 
 ## 1. Install
 
@@ -30,6 +31,7 @@ The steps can each be run again on their own; every one converges:
 | `20-install-wazuh.sh` | Official installation assistant (`packages.wazuh.com/4.14/wazuh-install.sh -a`), which installs the signed packages. Holds the packages so they never upgrade unattended. Binds the API to `127.0.0.1:55000` and the dashboard to `127.0.0.1:8443`, and checks that the indexer is on `127.0.0.1`. Passwords stay in `/root/omniaxis-scdc/wazuh-install-files.tar`. |
 | `30-configure-wazuh.sh` | OmniAxis ruleset, portal integration and its Ed25519 signing key, the managed `ossec.conf` block (product label `company` on the server's own alerts, relay log files, the integration), password-protected agent enrolment, and the relay's API user (`event:ingest` only). |
 | `40-install-relay.sh` | Node (pinned, SHA-256 checked) in `/opt/node`, the relay in `/opt/omniaxis-intake-relay`, its sandboxed systemd unit, and Caddy (official signed repository) on 443 with one path, a 16 KB body limit and automatic TLS. |
+| `45-retention-backup.sh` | Retention and backups. The indexer deletes alert indices after `ALERT_INDEX_DAYS` (90) and archive, monitoring and statistics indices after `OTHER_INDEX_DAYS` (30), by Index State Management policies that also take in older indices. It snapshots `wazuh-*` daily at 03:30 UTC into `/var/lib/wazuh-indexer-snapshots` and keeps `SNAPSHOTS_KEPT` (14). A timer removes the manager's own alert and archive logs after `ALERT_INDEX_DAYS`. Once `/etc/omniaxis-scdc/backup.env` exists, restic copies the server's state and the snapshots, encrypted on the server, to the off-host store at 05:00 UTC, keeping 14 daily, 8 weekly and 12 monthly copies. |
 | `50-verify.sh` | Read-only checks: every internal port is loopback only, firewall, SSH, services, file permissions, and that the relay refuses and logs an unsigned request. |
 
 At the end, `30-configure-wazuh.sh` prints the **portal public key** (`whpk_…`) as a ready command for the portal repository: `pnpm keys add --source wazuh --environment production --public-key whpk_… --label "…"`. The private half never leaves the server.
@@ -104,13 +106,13 @@ Once it reports, **retire the OmniAxis SSH forwarder** on the gate host. Do that
 | Events that fell back to file | `/var/log/omniaxis-scdc/intake.log` (read by Wazuh, so nothing is lost) |
 | Portal hand-off errors | `/var/ossec/logs/integrations.log`; undelivered alerts wait in `/var/ossec/var/omniaxis/portal-spool/` and are re-sent on the next alert |
 | Alerts | Dashboard, or `/var/ossec/logs/alerts/alerts.json` |
+| Off-host backup | `journalctl -u omniaxis-scdc-backup`; run one now with `systemctl start omniaxis-scdc-backup` |
+| Snapshots | `GET _cat/snapshots/omniaxis-fs` on the indexer |
 | Re-key the relay's API password | `create-intake-api-user.py … --rotate`, then `systemctl restart omniaxis-intake-relay` |
 
 ## 7. Limits worth knowing
 
 - **Event rate.** Wazuh's `POST /events` is capped at 30 requests a minute; the cap is hard-coded in 4.14.9 (`api/api/middlewares.py`). Each request carries at most 100 events. The relay batches every 2.2 s, about 2,700 events a minute. Above that, or whenever the API fails, events go to `intake.log`, which Wazuh reads directly. Nothing is dropped.
 - **Dedupe** is per `(source, id)` for 7 days, kept in `/var/lib/omniaxis-intake/dedupe.journal`.
-- **Not done yet.**
-  - Indexer snapshots and backups beyond Hetzner's server backups.
-  - Alert retention policy (Wazuh's index lifecycle).
-  - An off-host copy of `/root/omniaxis-scdc`.
+- **Retention.** Alert indices and the manager's alert logs: 90 days. Archive, monitoring and statistics indices: 30 days. Indexer snapshots: 14 days on the server. Off-host copies: 14 daily, 8 weekly, 12 monthly. Change the first three in `config.env` and run `45-retention-backup.sh` again.
+- **Restore.** `restic` with the same `backup.env` and password: `set -a; . /etc/omniaxis-scdc/backup.env; set +a; RESTIC_PASSWORD_FILE=/etc/omniaxis-scdc/restic-password restic restore latest --target /restore`. Indexer data comes back from the snapshot repository: `POST _snapshot/omniaxis-fs/<snapshot>/_restore`.

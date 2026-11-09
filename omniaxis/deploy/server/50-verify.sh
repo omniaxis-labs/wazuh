@@ -6,6 +6,7 @@ need_root; load_config
 fail=0
 ok() { echo "  ok   $*"; }
 bad() { echo "  FAIL $*"; fail=1; }
+warn() { echo "  WARN $*"; }
 
 listeners="$(ss -H -ltn | awk '{print $4}')"
 public_port() { echo "$listeners" | grep -E "^(0\.0\.0\.0|\*|\[::\]):$1$" >/dev/null; }
@@ -37,6 +38,21 @@ grep -q 'omniaxis:begin' /var/ossec/etc/ossec.conf && ok "omniaxis ossec.conf bl
 [ -f /var/ossec/etc/rules/0900-omniaxis_scdc_rules.xml ] && ok "SCDC rules installed" || bad "SCDC rules missing"
 [ "$(stat -c '%a %U' /etc/omniaxis-intake/api-password 2>/dev/null)" = "400 scdc-intake" ] && ok "relay API password file 0400" || bad "relay API password file permissions"
 [ "$(stat -c '%a' /var/ossec/etc/omniaxis/portal-signing.key 2>/dev/null)" = 640 ] && ok "portal signing key 0640 root:wazuh" || bad "portal signing key permissions"
+
+# Retention, snapshots and the off-host copy (45-retention-backup.sh).
+grep -qE '^path.repo: *\["?/var/lib/wazuh-indexer-snapshots"?\]' /etc/wazuh-indexer/opensearch.yml && ok "indexer snapshot path set" || bad "indexer path.repo missing"
+idx() { curl -s --cacert /etc/wazuh-indexer/certs/root-ca.pem -K <(printf 'user = "admin:%s"\n' "$(cat "$STATE_DIR/wazuh-indexer-admin")") "https://127.0.0.1:9200$1"; }
+for p in omniaxis-alerts omniaxis-other; do
+  idx "/_plugins/_ism/policies/$p" | grep -q '"policy_id":"'"$p"'"' && ok "retention policy $p" || bad "retention policy $p missing"
+done
+idx /_plugins/_sm/policies/omniaxis-daily | grep -q '"enabled":true' && ok "daily indexer snapshots on" || bad "snapshot policy missing or off"
+systemctl is-active -q omniaxis-scdc-log-retention.timer && ok "log retention timer active" || bad "log retention timer inactive"
+if [ -f /etc/omniaxis-scdc/backup.env ]; then
+  systemctl is-active -q omniaxis-scdc-backup.timer && ok "off-host backup timer active" || bad "off-host backup timer inactive"
+  [ "$(systemctl show -p Result --value omniaxis-scdc-backup.service)" = success ] && ok "last off-host backup succeeded (or none yet)" || bad "last off-host backup failed: journalctl -u omniaxis-scdc-backup"
+else
+  warn "off-host backup not configured (/etc/omniaxis-scdc/backup.env)"
+fi
 
 # The relay refuses an unsigned request and logs it for Wazuh.
 before="$(wc -l < /var/log/omniaxis-scdc/relay.log)"
