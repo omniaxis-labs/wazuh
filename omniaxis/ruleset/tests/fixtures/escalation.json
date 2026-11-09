@@ -1,0 +1,103 @@
+[
+  {
+    "name": "Five SEV3 repeats of one dedupe key escalate to SEV2",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 5
+      }
+    ],
+    "expect": {
+      "rule_id": "100115",
+      "level": 10,
+      "groups": [
+        "musterward",
+        "scdc_sev2",
+        "scdc_escalated"
+      ]
+    }
+  },
+  {
+    "name": "SEV3 repeats with different dedupe keys do not escalate",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k0\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k1\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k2\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k3\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k4\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k5\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k6\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      },
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"k7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100113",
+      "level": 7
+    }
+  },
+  {
+    "name": "Five SEV2 repeats escalate to SEV1",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"omniaxis\",\"product\":\"omniaxis\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev2\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 5
+      }
+    ],
+    "expect": {
+      "rule_id": "100126",
+      "level": 13,
+      "groups": [
+        "omniaxis",
+        "scdc_sev1",
+        "scdc_escalated"
+      ]
+    }
+  },
+  {
+    "name": "Four SEV3 repeats stay at SEV3",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 4
+      }
+    ],
+    "expect": {
+      "rule_id": "100113",
+      "level": 7
+    }
+  }
+]

@@ -1,0 +1,4 @@
+{
+  "_comment": "Products allowed to send SCDC events. The order fixes rule ids: never reorder, only append. Rule id base = 100110 + 10 * index.",
+  "products": ["musterward", "omniaxis", "rackhand", "crosswalk"]
+}

@@ -1,0 +1,23 @@
+{
+	"name": "@omniaxis-labs/scdc-verifier",
+	"private": true,
+	"version": "0.1.0",
+	"description": "Verifies signed SCDC intake requests (Standard Webhooks v1a, Ed25519). No runtime dependencies.",
+	"type": "module",
+	"main": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"scripts": {
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/node": "26.6.6",
+		"typescript": "7.0.2",
+		"vitest": "5.0.5"
+	}
+}

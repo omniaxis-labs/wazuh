@@ -1,0 +1,220 @@
+[
+  {
+    "name": "Musterward SEV1 maps to level 13 with product group",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev1\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100111",
+      "level": 13,
+      "groups": [
+        "scdc",
+        "musterward",
+        "scdc_sev1"
+      ],
+      "data": {
+        "product": "musterward",
+        "source": "musterward"
+      }
+    }
+  },
+  {
+    "name": "Musterward SEV2 maps to level 10",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev2\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100112",
+      "level": 10,
+      "groups": [
+        "musterward",
+        "scdc_sev2"
+      ]
+    }
+  },
+  {
+    "name": "Musterward SEV3 maps to level 7",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100113",
+      "level": 7,
+      "groups": [
+        "musterward",
+        "scdc_sev3"
+      ]
+    }
+  },
+  {
+    "name": "Musterward SEV4 maps to level 3",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev4\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100114",
+      "level": 3,
+      "groups": [
+        "musterward",
+        "scdc_sev4"
+      ]
+    }
+  },
+  {
+    "name": "OmniAxis SEV3 lands in the omniaxis group",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"omniaxis\",\"product\":\"omniaxis\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100123",
+      "level": 7,
+      "groups": [
+        "omniaxis",
+        "scdc_sev3"
+      ],
+      "data": {
+        "product": "omniaxis"
+      }
+    }
+  },
+  {
+    "name": "Rackhand SEV1",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"rackhand\",\"product\":\"rackhand\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev1\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100131",
+      "level": 13,
+      "groups": [
+        "rackhand",
+        "scdc_sev1"
+      ]
+    }
+  },
+  {
+    "name": "Crosswalk SEV4",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"crosswalk\",\"product\":\"crosswalk\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev4\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100144",
+      "level": 3,
+      "groups": [
+        "crosswalk",
+        "scdc_sev4"
+      ]
+    }
+  },
+  {
+    "name": "Nested refs and counts are decoded",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev2\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100112",
+      "data": {
+        "refs.tenant_ref": "t_9f2c00112233445566778899aabbccdd",
+        "refs.resource": "musterward-web",
+        "counts.attempts": "3",
+        "dedupe_key": "auth.step_up_failed:s_7"
+      }
+    }
+  },
+  {
+    "name": "Preview environment is kept on the alert",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"preview\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev3\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100113",
+      "data": {
+        "environment": "preview"
+      }
+    }
+  },
+  {
+    "name": "File sink location is accepted",
+    "events": [
+      {
+        "location": "/var/log/omniaxis-scdc/intake.log",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev1\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100111",
+      "level": 13
+    }
+  },
+  {
+    "name": "Product with no rules is SEV2",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"acme\",\"product\":\"acme\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"sev4\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100103",
+      "level": 10,
+      "groups": [
+        "scdc_unknown_product"
+      ]
+    }
+  },
+  {
+    "name": "Unrecognised severity falls back to the product rule",
+    "events": [
+      {
+        "location": "API-Webhook",
+        "log": "omniaxis-scdc: {\"specversion\":\"scdc/1\",\"id\":\"evt_01JTEST\",\"source\":\"musterward\",\"product\":\"musterward\",\"environment\":\"production\",\"type\":\"auth.step_up_failed\",\"time\":\"2026-11-07T05:12:49Z\",\"severity\":\"critical\",\"dedupe_key\":\"auth.step_up_failed:s_7\",\"title\":\"Staff step-up failed\",\"refs\":{\"tenant_ref\":\"t_9f2c00112233445566778899aabbccdd\",\"actor_ref\":\"s_7\",\"resource\":\"musterward-web\"},\"counts\":{\"attempts\":3},\"reason\":\"no_permission\",\"received_at\":\"2026-11-07T05:12:50Z\"}",
+        "repeat": 1
+      }
+    ],
+    "expect": {
+      "rule_id": "100110",
+      "level": 5,
+      "groups": [
+        "musterward",
+        "scdc_bad_severity"
+      ]
+    }
+  }
+]
