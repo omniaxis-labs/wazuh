@@ -20,6 +20,7 @@ gate host (wazuh-agent, product label) ----------------------------^
 | `deploy/agent/` | Agent enrolment with a product label (first: the gate host). |
 | `deploy/docker/` | Local single-node test stack and the end-to-end test. |
 | `deploy/RUNBOOK.md` | How to install, operate and upgrade. |
+| `golden/` | The SCDC agents' golden set: planted, labelled scenarios run through the real 4.14.9 ruleset and exported for the portal (`pnpm golden:import`). Wazuh stays the sensor; no rules are added here. `scenarios.py` also lists the sensor gaps found while building it. |
 | `docs/github-audit-coverage.md` | Whether Wazuh's GitHub module can replace the OmniAxis org webhook (no; see the document). |
 
 ## Tests
@@ -35,6 +36,7 @@ It runs:
 - the shared verifier's own 47 tests (vendored from the portal);
 - 13 integration tests under Wazuh's bundled Python, including the portal's signing test vector byte for byte;
 - the config-edit tests;
+- the golden set export: every planted scenario must raise a real alert, and each class must hold both malicious and benign look-alikes;
 - the end-to-end path: signed event → relay → API → rules → signed portal push, with every push checked by the portal's own verifier.
 
 Pull requests are checked by the Musterward Gate, not GitHub Actions (see `CLAUDE.md`). It runs the parts that need no Docker: the generator check, the relay and verifier tests, the integration tests and script syntax, as listed in `scripts/ci/gate/coordinator.json`.
