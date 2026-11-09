@@ -25,6 +25,15 @@ step "deploy: script syntax and config edits"
 for f in "$ROOT"/deploy/server/*.sh "$ROOT"/deploy/agent/*.sh "$ROOT"/deploy/docker/*.sh; do bash -n "$f"; done
 "$ROOT/deploy/server/tests/test_text_edits.sh"
 
+step "deploy: retention and snapshot bodies (unit)"
+python3 -B -m unittest discover -s "$ROOT/deploy/server/tests" -p 'test_*.py' 2>&1 | tail -n 1
+
+step "deploy: retention and snapshots on a real wazuh-indexer 4.14.9"
+"$ROOT/deploy/server/tests/test_indexer_lifecycle.sh" | grep -E 'ok|FAIL|passed'
+
+step "deploy: off-host backup (restic, Ubuntu 24.04)"
+"$ROOT/deploy/server/tests/test_backup.sh" 2>/dev/null | grep -E 'ok|FAIL|passed'
+
 step "end to end: relay -> Wazuh API -> rules -> signed portal push"
 "$ROOT/deploy/docker/e2e.sh" 2>&1 | grep -E '^\[e2e\]|ok|->|product'
 

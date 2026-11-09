@@ -1,0 +1,11 @@
+[Unit]
+Description=OmniAxis SCDC: encrypted off-host backup (restic)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/omniaxis-scdc-backup run
+Nice=10
+IOSchedulingClass=idle
+PrivateTmp=yes
